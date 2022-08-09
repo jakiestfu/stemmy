@@ -1,0 +1,40 @@
+{
+    "name": "@jakiestfu/stemmy",
+    "version": "0.1.0",
+    "description": "An experimental Typescript wrapper for demucs",
+    "main": ".build/src/index.js",
+    "scripts": {
+        "prebuild": "yarn clean",
+        "build": "ttsc -p ./tsconfig.json",
+        "postbuild": "chmod +x .build/bin/stemmy.js",
+        "clean": "rimraf .build"
+    },
+    "bin": {
+        "stemmy": ".build/bin/stemmy.js"
+    },
+    "keywords": [],
+    "author": "Jacob Kelley",
+    "license": "MIT",
+    "dependencies": {
+        "@types/cli-progress": "^3.11.0",
+        "cli-progress": "^3.11.2",
+        "colors": "^1.4.0",
+        "commander": "^9.4.0",
+        "download": "^8.0.0",
+        "fs-extra": "^10.1.0",
+        "mkdirp": "^1.0.4",
+        "mv": "^2.1.1",
+        "tree-kill": "^1.2.2"
+    },
+    "devDependencies": {
+        "@types/download": "^8.0.1",
+        "@types/fs-extra": "^9.0.13",
+        "@types/mkdirp": "^1.0.2",
+        "@types/node": "^18.6.5",
+        "@types/progress": "^2.0.5",
+        "rimraf": "^3.0.2",
+        "ttypescript": "^1.5.13",
+        "typescript": "^4.7.4",
+        "typescript-transform-paths": "^3.3.1"
+    }
+}
