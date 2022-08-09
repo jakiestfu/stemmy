@@ -1,0 +1,7 @@
+.stems
+.build
+node_modules
+downloads
+package-lock.json
+*.log
+.stemmy
