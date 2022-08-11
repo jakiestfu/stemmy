@@ -17,10 +17,15 @@ const spawnAndWait = (
   args: Array<string>,
   opts: {
     cwd?: string;
+    onData?: (data: Buffer) => void;
     onError?: (data: Buffer) => void;
   } = {}
 ) => {
   return new Promise((resolve, reject) => {
+    console.log('SPAWN AND WAIT', command, args, {
+      cwd: opts.cwd,
+    })
+
     const child = spawn(command, args, {
       cwd: opts.cwd,
     });
@@ -32,10 +37,7 @@ const spawnAndWait = (
       if (child.pid) treeKill(child.pid);
     });
 
-    // child.stdout.on("data", (data) => {
-    //   console.log(`child stdout:\n${data}`);
-    // });
-
+    if (opts.onData) child.stdout.on("data", opts.onData);
     if (opts.onError) child.stderr.on("data", opts.onError);
 
     child.on("error", (error) => {
@@ -43,6 +45,7 @@ const spawnAndWait = (
     });
 
     child.on("exit", (code, signal) => {
+      console.log('EXITING', code, signal)
       if (signal !== null) {
         reject(new Error(`Child process exited due to signal: ${signal}`));
       } else {
@@ -67,6 +70,12 @@ type StemmyOptions = {
 };
 
 export const stemmy = async (opts: StemmyOptions) => {
+
+  opts.onUpdate?.({
+    task: 'Initializing...',
+    percentComplete: 0,
+  });
+
   const baseName = path
     .basename(opts.file)
     .replace(path.parse(opts.file).ext, "");
@@ -94,7 +103,6 @@ export const stemmy = async (opts: StemmyOptions) => {
     "--mp3",
   ];
 
-  // console.log("Running demucs...", args);
   await spawnAndWait(path.join(opts.demucs, "demucs-cxfreeze"), args, {
     onError: (data) => {
       const percentMatches = data.toString().match(/[0-9]+%/g);
@@ -112,12 +120,7 @@ export const stemmy = async (opts: StemmyOptions) => {
 
       const task = `Extracting ${tracks[currentPredictionIndex]} track...`;
       const percentComplete = totalPercent / nModels;
-      console.log({
-        task,
-        percentComplete,
-        i: currentPredictionIndex,
-        trackPercent,
-      })
+
       opts.onUpdate?.({
         task,
         percentComplete,
@@ -133,6 +136,7 @@ export const stemmy = async (opts: StemmyOptions) => {
     task: "Bouncing instrumental...",
     percentComplete: 0,
   });
+
   await spawnAndWait("ffmpeg", [
     "-i",
     path.join(tmpDir, "bass.mp3"),
