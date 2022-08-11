@@ -19,6 +19,9 @@ const getJobsDefault = () => {
 exports.getJobsDefault = getJobsDefault;
 const spawnAndWait = (command, args, opts = {}) => {
     return new Promise((resolve, reject) => {
+        console.log('SPAWN AND WAIT', command, args, {
+            cwd: opts.cwd,
+        });
         const child = (0, child_process_1.spawn)(command, args, {
             cwd: opts.cwd,
         });
@@ -30,12 +33,15 @@ const spawnAndWait = (command, args, opts = {}) => {
             if (child.pid)
                 (0, tree_kill_1.default)(child.pid);
         });
+        if (opts.onData)
+            child.stdout.on("data", opts.onData);
         if (opts.onError)
             child.stderr.on("data", opts.onError);
         child.on("error", (error) => {
             reject(error);
         });
         child.on("exit", (code, signal) => {
+            console.log('EXITING', code, signal);
             if (signal !== null) {
                 reject(new Error(`Child process exited due to signal: ${signal}`));
             }
@@ -46,6 +52,10 @@ const spawnAndWait = (command, args, opts = {}) => {
     });
 };
 const stemmy = async (opts) => {
+    opts.onUpdate?.({
+        task: 'Initializing...',
+        percentComplete: 0,
+    });
     const baseName = path_1.default
         .basename(opts.file)
         .replace(path_1.default.parse(opts.file).ext, "");
@@ -86,12 +96,6 @@ const stemmy = async (opts) => {
             }
             const task = `Extracting ${tracks[currentPredictionIndex]} track...`;
             const percentComplete = totalPercent / nModels;
-            console.log({
-                task,
-                percentComplete,
-                i: currentPredictionIndex,
-                trackPercent,
-            });
             opts.onUpdate?.({
                 task,
                 percentComplete,
