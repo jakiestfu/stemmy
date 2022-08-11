@@ -84,16 +84,39 @@ const stemmy = async (opts) => {
                 if (delta >= 0)
                     totalPercent += delta;
             }
-            const task = `Generating ${tracks[currentPredictionIndex]} track...`;
+            const task = `Extracting ${tracks[currentPredictionIndex]} track...`;
             const percentComplete = totalPercent / nModels;
+            console.log({
+                task,
+                percentComplete,
+                i: currentPredictionIndex,
+                trackPercent,
+            });
             opts.onUpdate?.({
                 task,
                 percentComplete,
+                i: currentPredictionIndex,
+                trackPercent,
             });
             if (trackPercent === 100)
                 currentPredictionIndex++;
         },
     });
+    opts.onUpdate?.({
+        task: "Bouncing instrumental...",
+        percentComplete: 0,
+    });
+    await spawnAndWait("ffmpeg", [
+        "-i",
+        path_1.default.join(tmpDir, "bass.mp3"),
+        "-i",
+        path_1.default.join(tmpDir, "drums.mp3"),
+        "-i",
+        path_1.default.join(tmpDir, "other.mp3"),
+        "-filter_complex",
+        "amix=inputs=3:normalize=0",
+        path_1.default.join(tmpDir, "instrumental.mp3"),
+    ]);
     const finalOutDir = path_1.default.join(opts.outDir, baseName);
     if (fs_extra_1.default.existsSync(finalOutDir)) {
         await fs_extra_1.default.rm(finalOutDir, { recursive: true, force: true });

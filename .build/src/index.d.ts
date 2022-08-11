@@ -8,6 +8,8 @@ declare type StemmyOptions = {
     onUpdate?: (data: {
         task: string;
         percentComplete: number;
+        i?: number;
+        trackPercent?: number;
     }) => void;
 };
 export declare const stemmy: (opts: StemmyOptions) => Promise<void>;
