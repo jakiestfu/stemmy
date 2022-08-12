@@ -60,8 +60,8 @@ cli
         task: "Initializing..."
     });
     const cwd = process.cwd();
-    (0, stemmy_1.stemmy)({
-        file: path_1.default.join(cwd, file),
+    await (0, stemmy_1.stemmy)({
+        file,
         outDir: opts.outDir ?? path_1.default.join(cwd, ".stems"),
         demucs: path_1.default.join(opts.resourcesDir, "demucs", "demucs-cxfreeze-1.0.0-mac"),
         models: path_1.default.join(opts.resourcesDir, "models"),
@@ -70,6 +70,12 @@ cli
                 task,
             });
         },
+        onError: () => {
+        },
+        onComplete: (res) => {
+            console.log('Stemmy is done', res);
+            process.exit(0);
+        }
     });
 });
 cli.parse();

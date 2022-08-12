@@ -80,8 +80,8 @@ cli
 
     const cwd = process.cwd();
 
-    stemmy({
-      file: path.join(cwd, file),
+    await stemmy({
+      file,
       outDir: opts.outDir ?? path.join(cwd, ".stems"),
       demucs: path.join(
         opts.resourcesDir,
@@ -94,6 +94,13 @@ cli
           task,
         });
       },
+      onError: () => {
+        // console.error('ERROR', data.toString())
+      },
+      onComplete: (res) => {
+        console.log('Stemmy is done', res)
+        process.exit(0)
+      }
     });
   });
 

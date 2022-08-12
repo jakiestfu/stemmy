@@ -24,6 +24,7 @@
     "fs-extra": "^10.1.0",
     "mkdirp": "^1.0.4",
     "mv": "^2.1.1",
+    "sanitize-filename": "^1.6.3",
     "tree-kill": "^1.2.2"
   },
   "devDependencies": {

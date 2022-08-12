@@ -1,3 +1,4 @@
+/// <reference types="node" />
 export declare const getJobsDefault: () => number;
 declare type StemmyOptions = {
     file: string;
@@ -5,11 +6,17 @@ declare type StemmyOptions = {
     outDir: string;
     demucs: string;
     jobs?: number;
+    fast?: boolean;
     onUpdate?: (data: {
         task: string;
         percentComplete: number;
         i?: number;
         trackPercent?: number;
+    }) => void;
+    onError?: (data: Buffer) => void;
+    onComplete?: (data: {
+        directory: string;
+        files: string[];
     }) => void;
 };
 export declare const stemmy: (opts: StemmyOptions) => Promise<void>;

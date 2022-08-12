@@ -4,6 +4,7 @@ import { spawn } from "child_process";
 import mkdirp from "mkdirp";
 import treeKill from "tree-kill";
 import fs from "fs-extra";
+import sanitize from "sanitize-filename";
 
 export const getJobsDefault = () => {
   const maxJobs = 4;
@@ -22,10 +23,7 @@ const spawnAndWait = (
   } = {}
 ) => {
   return new Promise((resolve, reject) => {
-    console.log('SPAWN AND WAIT', command, args, {
-      cwd: opts.cwd,
-    })
-
+    // console.log("spawing", command, args);
     const child = spawn(command, args, {
       cwd: opts.cwd,
     });
@@ -45,7 +43,6 @@ const spawnAndWait = (
     });
 
     child.on("exit", (code, signal) => {
-      console.log('EXITING', code, signal)
       if (signal !== null) {
         reject(new Error(`Child process exited due to signal: ${signal}`));
       } else {
@@ -61,27 +58,30 @@ type StemmyOptions = {
   outDir: string;
   demucs: string;
   jobs?: number;
+  fast?: boolean;
   onUpdate?: (data: {
     task: string;
     percentComplete: number;
     i?: number;
     trackPercent?: number;
   }) => void;
+  onError?: (data: Buffer) => void;
+  onComplete?: (data: { directory: string; files: string[] }) => void;
 };
 
 export const stemmy = async (opts: StemmyOptions) => {
-
   opts.onUpdate?.({
-    task: 'Initializing...',
+    task: "Initializing...",
     percentComplete: 0,
   });
+  const id = (Math.random() + 1).toString(36).substring(7)
+  const extension = path.parse(opts.file).ext;
 
-  const baseName = path
-    .basename(opts.file)
-    .replace(path.parse(opts.file).ext, "");
+  const baseName = sanitize(path.basename(opts.file).replace(extension, ""));
 
-  const tmpDir = path.join(os.tmpdir(), "stemmy", baseName);
-  mkdirp.sync(tmpDir);
+  const tmpDir = path.join(os.tmpdir(), "stemmy", id);
+
+  await mkdirp(tmpDir);
 
   const tracks = ["vocals", "bass", "drums", "other"];
   const nModels = tracks.length;
@@ -90,10 +90,18 @@ export const stemmy = async (opts: StemmyOptions) => {
   let totalPercent = 0;
   let currentPredictionIndex = 0;
 
+  const modelName = opts.fast ? "83fc094f" : "mdx_extra_q";
+
+  const modelOutputDir = path.join(tmpDir, modelName);
+  await mkdirp(modelOutputDir);
+
+  const preparedInputPath = path.join(modelOutputDir, `original${extension}`);
+  fs.copyFileSync(opts.file, preparedInputPath);
+
   const args = [
-    opts.file,
+    preparedInputPath,
     "-n",
-    "mdx_extra_q",
+    modelName,
     "--repo",
     opts.models,
     "-j",
@@ -103,34 +111,52 @@ export const stemmy = async (opts: StemmyOptions) => {
     "--mp3",
   ];
 
-  await spawnAndWait(path.join(opts.demucs, "demucs-cxfreeze"), args, {
-    onError: (data) => {
-      const percentMatches = data.toString().match(/[0-9]+%/g);
-      if (!percentMatches) return;
-      try {
-        trackPercent = parseInt(percentMatches[0].replace("%", ""));
-      } catch (e) {}
+  const allExist = tracks.every((track) =>
+    fs.existsSync(path.join(modelOutputDir, `${track}.mp3`))
+  );
 
-      const delta = trackPercent - lastTrackPercent;
+  if (!allExist) {
+    await spawnAndWait(path.join(opts.demucs, "demucs-cxfreeze"), args, {
+      onError: (data) => {
+        const percentMatches = data.toString().match(/[0-9]+%/g);
+        if (!percentMatches) {
+          opts.onError?.(data);
+          return;
+        }
+        try {
+          trackPercent = parseInt(percentMatches[0].replace("%", ""));
+        } catch (e) {}
 
-      if (trackPercent !== lastTrackPercent) {
-        lastTrackPercent = trackPercent;
-        if (delta >= 0) totalPercent += delta;
-      }
+        const delta = trackPercent - lastTrackPercent;
 
-      const task = `Extracting ${tracks[currentPredictionIndex]} track...`;
-      const percentComplete = totalPercent / nModels;
+        if (trackPercent !== lastTrackPercent) {
+          lastTrackPercent = trackPercent;
+          if (delta >= 0) totalPercent += delta;
+        }
 
-      opts.onUpdate?.({
-        task,
-        percentComplete,
-        i: currentPredictionIndex,
-        trackPercent,
-      });
+        const task = `Extracting ${tracks[currentPredictionIndex]} track...`;
+        const percentComplete = totalPercent / nModels;
 
-      if (trackPercent === 100) currentPredictionIndex++;
-    },
-  });
+        opts.onUpdate?.({
+          task,
+          percentComplete,
+          i: currentPredictionIndex,
+          trackPercent,
+        });
+
+        if (trackPercent === 100) {
+          if ((currentPredictionIndex = tracks.length - 1)) {
+            opts.onUpdate?.({
+              task: "Writing files...",
+              percentComplete,
+              i: currentPredictionIndex,
+              trackPercent,
+            });
+          } else currentPredictionIndex++;
+        }
+      },
+    });
+  }
 
   opts.onUpdate?.({
     task: "Bouncing instrumental...",
@@ -139,21 +165,28 @@ export const stemmy = async (opts: StemmyOptions) => {
 
   await spawnAndWait("ffmpeg", [
     "-i",
-    path.join(tmpDir, "bass.mp3"),
+    path.join(modelOutputDir, "bass.mp3"),
     "-i",
-    path.join(tmpDir, "drums.mp3"),
+    path.join(modelOutputDir, "drums.mp3"),
     "-i",
-    path.join(tmpDir, "other.mp3"),
+    path.join(modelOutputDir, "other.mp3"),
     "-filter_complex",
     "amix=inputs=3:normalize=0",
-    path.join(tmpDir, "instrumental.mp3"),
+    path.join(modelOutputDir, "instrumental.mp3"),
   ]);
 
   const finalOutDir = path.join(opts.outDir, baseName);
-  if (fs.existsSync(finalOutDir)) {
+  
+  if (fs.existsSync(finalOutDir))
     await fs.rm(finalOutDir, { recursive: true, force: true });
-  }
-  await fs.move(path.join(tmpDir, "mdx_extra_q", baseName), finalOutDir);
 
-  // console.log("Done!");
+  await fs.move(modelOutputDir, finalOutDir);
+  await fs.rm(tmpDir, { recursive: true, force: true });
+
+  opts.onComplete?.({
+    directory: finalOutDir,
+    files: [...tracks, "instrumental", "original"].map((track) =>
+      path.join(finalOutDir, `${track}.mp3`)
+    ),
+  });
 };
