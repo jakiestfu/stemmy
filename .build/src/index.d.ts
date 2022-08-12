@@ -1,5 +1,4 @@
 /// <reference types="node" />
-export declare const getJobsDefault: () => number;
 declare type StemmyOptions = {
     file: string;
     models: string;
@@ -12,6 +11,7 @@ declare type StemmyOptions = {
         percentComplete: number;
         i?: number;
         trackPercent?: number;
+        status?: 'known' | 'unknown';
     }) => void;
     onError?: (data: Buffer) => void;
     onComplete?: (data: {

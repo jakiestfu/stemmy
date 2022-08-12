@@ -1,56 +1,9 @@
 import path from "path";
-import os from "os";
-import { spawn } from "child_process";
 import mkdirp from "mkdirp";
-import treeKill from "tree-kill";
 import fs from "fs-extra";
 import sanitize from "sanitize-filename";
-
-export const getJobsDefault = () => {
-  const maxJobs = 4;
-  const numMemories = Math.floor(os.freemem() / 2000000000);
-  const numCpus = os.cpus().length;
-  return Math.max(1, Math.min(Math.min(numCpus, numMemories), maxJobs));
-};
-
-const spawnAndWait = (
-  command: string,
-  args: Array<string>,
-  opts: {
-    cwd?: string;
-    onData?: (data: Buffer) => void;
-    onError?: (data: Buffer) => void;
-  } = {}
-) => {
-  return new Promise((resolve, reject) => {
-    // console.log("spawing", command, args);
-    const child = spawn(command, args, {
-      cwd: opts.cwd,
-    });
-
-    process.on("SIGINT", () => {
-      if (child.pid) treeKill(child.pid);
-    });
-    process.on("exit", () => {
-      if (child.pid) treeKill(child.pid);
-    });
-
-    if (opts.onData) child.stdout.on("data", opts.onData);
-    if (opts.onError) child.stderr.on("data", opts.onError);
-
-    child.on("error", (error) => {
-      reject(error);
-    });
-
-    child.on("exit", (code, signal) => {
-      if (signal !== null) {
-        reject(new Error(`Child process exited due to signal: ${signal}`));
-      } else {
-        resolve(code);
-      }
-    });
-  });
-};
+import os from 'os';
+import { capitalize, getJobsDefault, spawnAndWait } from "./lib";
 
 type StemmyOptions = {
   file: string;
@@ -64,6 +17,7 @@ type StemmyOptions = {
     percentComplete: number;
     i?: number;
     trackPercent?: number;
+    status?: 'known' | 'unknown'
   }) => void;
   onError?: (data: Buffer) => void;
   onComplete?: (data: { directory: string; files: string[] }) => void;
@@ -73,6 +27,7 @@ export const stemmy = async (opts: StemmyOptions) => {
   opts.onUpdate?.({
     task: "Initializing...",
     percentComplete: 0,
+    status: 'unknown',
   });
   const id = (Math.random() + 1).toString(36).substring(7)
   const extension = path.parse(opts.file).ext;
@@ -134,7 +89,7 @@ export const stemmy = async (opts: StemmyOptions) => {
           if (delta >= 0) totalPercent += delta;
         }
 
-        const task = `Extracting ${tracks[currentPredictionIndex]} track...`;
+        const task = `Applying "${capitalize(tracks[currentPredictionIndex])}" tensor model...`;
         const percentComplete = totalPercent / nModels;
 
         opts.onUpdate?.({
@@ -142,15 +97,17 @@ export const stemmy = async (opts: StemmyOptions) => {
           percentComplete,
           i: currentPredictionIndex,
           trackPercent,
+          status: 'known',
         });
 
         if (trackPercent === 100) {
           if ((currentPredictionIndex = tracks.length - 1)) {
             opts.onUpdate?.({
-              task: "Writing files...",
+              task: "Generating tracks...",
               percentComplete,
               i: currentPredictionIndex,
               trackPercent,
+              status: 'unknown',
             });
           } else currentPredictionIndex++;
         }
@@ -159,8 +116,9 @@ export const stemmy = async (opts: StemmyOptions) => {
   }
 
   opts.onUpdate?.({
-    task: "Bouncing instrumental...",
+    task: "Bouncing Instrumental...",
     percentComplete: 0,
+    status: 'unknown',
   });
 
   await spawnAndWait("ffmpeg", [
