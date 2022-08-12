@@ -14,7 +14,7 @@ const stemmy = async (opts) => {
     opts.onUpdate?.({
         task: "Initializing...",
         percentComplete: 0,
-        status: 'unknown',
+        status: "unknown",
     });
     const id = (Math.random() + 1).toString(36).substring(7);
     const extension = path_1.default.parse(opts.file).ext;
@@ -28,7 +28,7 @@ const stemmy = async (opts) => {
     let totalPercent = 0;
     let currentPredictionIndex = 0;
     const modelName = opts.fast ? "83fc094f" : "mdx_extra_q";
-    const modelOutputDir = path_1.default.join(tmpDir, modelName);
+    const modelOutputDir = path_1.default.join(tmpDir, modelName, "original");
     await (0, mkdirp_1.default)(modelOutputDir);
     const preparedInputPath = path_1.default.join(modelOutputDir, `original${extension}`);
     fs_extra_1.default.copyFileSync(opts.file, preparedInputPath);
@@ -45,7 +45,7 @@ const stemmy = async (opts) => {
         "--mp3",
     ];
     const allExist = tracks.every((track) => fs_extra_1.default.existsSync(path_1.default.join(modelOutputDir, `${track}.mp3`)));
-    if (!allExist) {
+    if (!allExist)
         await (0, lib_1.spawnAndWait)(path_1.default.join(opts.demucs, "demucs-cxfreeze"), args, {
             onError: (data) => {
                 const percentMatches = data.toString().match(/[0-9]+%/g);
@@ -70,7 +70,7 @@ const stemmy = async (opts) => {
                     percentComplete,
                     i: currentPredictionIndex,
                     trackPercent,
-                    status: 'known',
+                    status: "known",
                 });
                 if (trackPercent === 100) {
                     if ((currentPredictionIndex = tracks.length - 1)) {
@@ -79,7 +79,7 @@ const stemmy = async (opts) => {
                             percentComplete,
                             i: currentPredictionIndex,
                             trackPercent,
-                            status: 'unknown',
+                            status: "unknown",
                         });
                     }
                     else
@@ -87,11 +87,10 @@ const stemmy = async (opts) => {
                 }
             },
         });
-    }
     opts.onUpdate?.({
         task: "Bouncing Instrumental...",
         percentComplete: 0,
-        status: 'unknown',
+        status: "unknown",
     });
     await (0, lib_1.spawnAndWait)("ffmpeg", [
         "-i",

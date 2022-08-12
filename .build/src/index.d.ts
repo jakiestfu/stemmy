@@ -11,7 +11,7 @@ declare type StemmyOptions = {
         percentComplete: number;
         i?: number;
         trackPercent?: number;
-        status?: 'known' | 'unknown';
+        status?: "known" | "unknown";
     }) => void;
     onError?: (data: Buffer) => void;
     onComplete?: (data: {

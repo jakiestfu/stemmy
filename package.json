@@ -4,6 +4,7 @@
   "description": "An experimental Typescript wrapper for demucs",
   "main": ".build/src/index.js",
   "scripts": {
+    "example": ".build/bin/stemmy.js make ~/Desktop/DaBaby - Red Light Green Light (Official Video).mp3 -r ~/code/trill-app/.build/resources/stemmy -o .bounce",
     "prebuild": "yarn clean",
     "build": "ttsc -p ./tsconfig.json",
     "postbuild": "chmod +x .build/bin/stemmy.js",
@@ -25,6 +26,7 @@
     "mkdirp": "^1.0.4",
     "mv": "^2.1.1",
     "sanitize-filename": "^1.6.3",
+    "slugify": "^1.6.5",
     "tree-kill": "^1.2.2"
   },
   "devDependencies": {
