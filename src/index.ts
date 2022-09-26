@@ -21,11 +21,12 @@ type StemmyOptions = {
   }) => void;
   onError?: (data: Buffer) => void;
   onComplete?: (data: { directory: string; files: string[] }) => void;
+  include?: Array<'instrumental' | 'original'>
 };
 
 export const stemmy = async (opts: StemmyOptions) => {
   opts.onUpdate?.({
-    task: "Initializing...",
+    task: "Initializing",
     percentComplete: 0,
     status: "unknown",
   });
@@ -45,6 +46,9 @@ export const stemmy = async (opts: StemmyOptions) => {
   let lastTrackPercent = 0;
   let totalPercent = 0;
   let currentPredictionIndex = 0;
+
+  const includeInstrumental = opts.include?.includes('instrumental')
+  const includeOriginal = opts.include?.includes('original')
 
   const modelName = opts.fast ? "83fc094f" : "mdx_extra_q";
 
@@ -92,7 +96,7 @@ export const stemmy = async (opts: StemmyOptions) => {
 
         const task = `Applying "${capitalize(
           tracks[currentPredictionIndex]
-        )}" tensor model...`;
+        )}" tensor model`;
         const percentComplete = totalPercent / nModels;
 
         opts.onUpdate?.({
@@ -106,7 +110,7 @@ export const stemmy = async (opts: StemmyOptions) => {
         if (trackPercent === 100) {
           if ((currentPredictionIndex = tracks.length - 1)) {
             opts.onUpdate?.({
-              task: "Generating tracks...",
+              task: "Generating tracks",
               percentComplete,
               i: currentPredictionIndex,
               trackPercent,
@@ -117,23 +121,25 @@ export const stemmy = async (opts: StemmyOptions) => {
       },
     });
 
-  opts.onUpdate?.({
-    task: "Bouncing Instrumental...",
-    percentComplete: 0,
-    status: "unknown",
-  });
-
-  await spawnAndWait("ffmpeg", [
-    "-i",
-    path.join(modelOutputDir, "bass.mp3"),
-    "-i",
-    path.join(modelOutputDir, "drums.mp3"),
-    "-i",
-    path.join(modelOutputDir, "other.mp3"),
-    "-filter_complex",
-    "amix=inputs=3:normalize=0",
-    path.join(modelOutputDir, "instrumental.mp3"),
-  ]);
+  if (includeInstrumental) {
+    opts.onUpdate?.({
+      task: "Bouncing Instrumental",
+      percentComplete: 100,
+      status: "unknown",
+    });
+  
+    await spawnAndWait("ffmpeg", [
+      "-i",
+      path.join(modelOutputDir, "bass.mp3"),
+      "-i",
+      path.join(modelOutputDir, "drums.mp3"),
+      "-i",
+      path.join(modelOutputDir, "other.mp3"),
+      "-filter_complex",
+      "amix=inputs=3:normalize=0",
+      path.join(modelOutputDir, "instrumental.mp3"),
+    ]);
+  }
 
   const finalOutDir = path.join(opts.outDir, baseName);
 
@@ -147,10 +153,16 @@ export const stemmy = async (opts: StemmyOptions) => {
   // Remove temp dir
   await fs.rm(tmpDir, { recursive: true, force: true });
 
+  let finalTracks = [
+    ...tracks
+  ]
+  if (includeInstrumental) finalTracks = [...finalTracks, 'instrumental']
+  if (includeOriginal) finalTracks = [...finalTracks, 'original']
+
   // Done
   opts.onComplete?.({
     directory: finalOutDir,
-    files: [...tracks, "instrumental", "original"].map((track) =>
+    files: finalTracks.map((track) =>
       path.join(finalOutDir, `${track}.mp3`)
     ),
   });

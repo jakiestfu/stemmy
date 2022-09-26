@@ -12,7 +12,7 @@ const os_1 = __importDefault(require("os"));
 const lib_1 = require("./lib");
 const stemmy = async (opts) => {
     opts.onUpdate?.({
-        task: "Initializing...",
+        task: "Initializing",
         percentComplete: 0,
         status: "unknown",
     });
@@ -27,6 +27,8 @@ const stemmy = async (opts) => {
     let lastTrackPercent = 0;
     let totalPercent = 0;
     let currentPredictionIndex = 0;
+    const includeInstrumental = opts.include?.includes('instrumental');
+    const includeOriginal = opts.include?.includes('original');
     const modelName = opts.fast ? "83fc094f" : "mdx_extra_q";
     const modelOutputDir = path_1.default.join(tmpDir, modelName, "original");
     await (0, mkdirp_1.default)(modelOutputDir);
@@ -63,7 +65,7 @@ const stemmy = async (opts) => {
                     if (delta >= 0)
                         totalPercent += delta;
                 }
-                const task = `Applying "${(0, lib_1.capitalize)(tracks[currentPredictionIndex])}" tensor model...`;
+                const task = `Applying "${(0, lib_1.capitalize)(tracks[currentPredictionIndex])}" tensor model`;
                 const percentComplete = totalPercent / nModels;
                 opts.onUpdate?.({
                     task,
@@ -75,7 +77,7 @@ const stemmy = async (opts) => {
                 if (trackPercent === 100) {
                     if ((currentPredictionIndex = tracks.length - 1)) {
                         opts.onUpdate?.({
-                            task: "Generating tracks...",
+                            task: "Generating tracks",
                             percentComplete,
                             i: currentPredictionIndex,
                             trackPercent,
@@ -87,30 +89,39 @@ const stemmy = async (opts) => {
                 }
             },
         });
-    opts.onUpdate?.({
-        task: "Bouncing Instrumental...",
-        percentComplete: 0,
-        status: "unknown",
-    });
-    await (0, lib_1.spawnAndWait)("ffmpeg", [
-        "-i",
-        path_1.default.join(modelOutputDir, "bass.mp3"),
-        "-i",
-        path_1.default.join(modelOutputDir, "drums.mp3"),
-        "-i",
-        path_1.default.join(modelOutputDir, "other.mp3"),
-        "-filter_complex",
-        "amix=inputs=3:normalize=0",
-        path_1.default.join(modelOutputDir, "instrumental.mp3"),
-    ]);
+    if (includeInstrumental) {
+        opts.onUpdate?.({
+            task: "Bouncing Instrumental",
+            percentComplete: 100,
+            status: "unknown",
+        });
+        await (0, lib_1.spawnAndWait)("ffmpeg", [
+            "-i",
+            path_1.default.join(modelOutputDir, "bass.mp3"),
+            "-i",
+            path_1.default.join(modelOutputDir, "drums.mp3"),
+            "-i",
+            path_1.default.join(modelOutputDir, "other.mp3"),
+            "-filter_complex",
+            "amix=inputs=3:normalize=0",
+            path_1.default.join(modelOutputDir, "instrumental.mp3"),
+        ]);
+    }
     const finalOutDir = path_1.default.join(opts.outDir, baseName);
     if (fs_extra_1.default.existsSync(finalOutDir))
         await fs_extra_1.default.rm(finalOutDir, { recursive: true, force: true });
     await fs_extra_1.default.move(modelOutputDir, finalOutDir);
     await fs_extra_1.default.rm(tmpDir, { recursive: true, force: true });
+    let finalTracks = [
+        ...tracks
+    ];
+    if (includeInstrumental)
+        finalTracks = [...finalTracks, 'instrumental'];
+    if (includeOriginal)
+        finalTracks = [...finalTracks, 'original'];
     opts.onComplete?.({
         directory: finalOutDir,
-        files: [...tracks, "instrumental", "original"].map((track) => path_1.default.join(finalOutDir, `${track}.mp3`)),
+        files: finalTracks.map((track) => path_1.default.join(finalOutDir, `${track}.mp3`)),
     });
 };
 exports.stemmy = stemmy;

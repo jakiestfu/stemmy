@@ -18,6 +18,7 @@ declare type StemmyOptions = {
         directory: string;
         files: string[];
     }) => void;
+    include?: Array<'instrumental' | 'original'>;
 };
 export declare const stemmy: (opts: StemmyOptions) => Promise<void>;
 export {};
