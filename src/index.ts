@@ -10,8 +10,10 @@ type StemmyOptions = {
   models: string;
   outDir: string;
   demucs: string;
+  ffmpeg: string
   jobs?: number;
   fast?: boolean;
+  command?: boolean;
   onUpdate?: (data: {
     task: string;
     percentComplete: number;
@@ -75,8 +77,13 @@ export const stemmy = async (opts: StemmyOptions) => {
     fs.existsSync(path.join(modelOutputDir, `${track}.mp3`))
   );
 
+  const demucsPath = path.join(opts.demucs, "demucs-cxfreeze")
+  if (opts.command) {
+    console.log(demucsPath, args);
+  }
+
   if (!allExist)
-    await spawnAndWait(path.join(opts.demucs, "demucs-cxfreeze"), args, {
+    await spawnAndWait(demucsPath, args, {
       onError: (data) => {
         const percentMatches = data.toString().match(/[0-9]+%/g);
         if (!percentMatches) {
@@ -128,7 +135,7 @@ export const stemmy = async (opts: StemmyOptions) => {
       status: "unknown",
     });
   
-    await spawnAndWait("ffmpeg", [
+    await spawnAndWait(opts.ffmpeg, [
       "-i",
       path.join(modelOutputDir, "bass.mp3"),
       "-i",

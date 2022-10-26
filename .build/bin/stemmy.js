@@ -12,7 +12,9 @@ const package_json_1 = __importDefault(require("../package.json"));
 const stemmy_1 = require("../src");
 const safe_1 = __importDefault(require("colors/safe"));
 const cli_progress_1 = require("cli-progress");
-const demucs = "https://github.com/stemrollerapp/demucs-cxfreeze/releases/download/1.0.0/demucs-cxfreeze-1.0.0-mac.zip";
+const demucsUrl = () => {
+    return `https://github.com/stemrollerapp/demucs-cxfreeze/releases/download/1.0.0/demucs-cxfreeze-1.0.0-${process.platform === 'win32' ? 'win' : 'mac'}.zip`;
+};
 const models = [
     "https://dl.fbaipublicfiles.com/demucs/mdx_final/83fc094f-4a16d450.th",
     "https://dl.fbaipublicfiles.com/demucs/mdx_final/7fd6ef75-a905dd85.th",
@@ -40,7 +42,7 @@ cli
     if (fs_extra_1.default.existsSync(outputDir))
         await fs_extra_1.default.rm(outputDir, { recursive: true, force: true });
     console.log("Downloading demucs...");
-    await (0, download_1.default)(demucs, path_1.default.join(outputDir, "demucs"), {
+    await (0, download_1.default)(demucsUrl(), path_1.default.join(outputDir, "demucs"), {
         extract: true,
         filename: "demucs.zip",
     });
@@ -75,7 +77,8 @@ cli
         onComplete: (res) => {
             console.log('Stemmy is done', res);
             process.exit(0);
-        }
+        },
+        ffmpeg: 'ffmpeg'
     });
 });
 cli.parse();

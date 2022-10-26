@@ -8,8 +8,10 @@ import { stemmy } from "@jakiestfu/stemmy";
 import colors from "colors/safe";
 import { SingleBar } from "cli-progress";
 
-const demucs =
-  "https://github.com/stemrollerapp/demucs-cxfreeze/releases/download/1.0.0/demucs-cxfreeze-1.0.0-mac.zip";
+const demucsUrl = () => {
+  return `https://github.com/stemrollerapp/demucs-cxfreeze/releases/download/1.0.0/demucs-cxfreeze-1.0.0-${process.platform === 'win32' ? 'win' : 'mac'}.zip`
+}
+
 
 const models = [
   "https://dl.fbaipublicfiles.com/demucs/mdx_final/83fc094f-4a16d450.th",
@@ -47,7 +49,7 @@ cli
       await fs.rm(outputDir, { recursive: true, force: true });
 
     console.log("Downloading demucs...");
-    await download(demucs, path.join(outputDir, "demucs"), {
+    await download(demucsUrl(), path.join(outputDir, "demucs"), {
       extract: true,
       filename: "demucs.zip",
     });
@@ -100,7 +102,8 @@ cli
       onComplete: (res) => {
         console.log('Stemmy is done', res)
         process.exit(0)
-      }
+      },
+      ffmpeg: 'ffmpeg'
     });
   });
 

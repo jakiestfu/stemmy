@@ -47,8 +47,12 @@ const stemmy = async (opts) => {
         "--mp3",
     ];
     const allExist = tracks.every((track) => fs_extra_1.default.existsSync(path_1.default.join(modelOutputDir, `${track}.mp3`)));
+    const demucsPath = path_1.default.join(opts.demucs, "demucs-cxfreeze");
+    if (opts.command) {
+        console.log(demucsPath, args);
+    }
     if (!allExist)
-        await (0, lib_1.spawnAndWait)(path_1.default.join(opts.demucs, "demucs-cxfreeze"), args, {
+        await (0, lib_1.spawnAndWait)(demucsPath, args, {
             onError: (data) => {
                 const percentMatches = data.toString().match(/[0-9]+%/g);
                 if (!percentMatches) {
@@ -95,7 +99,7 @@ const stemmy = async (opts) => {
             percentComplete: 100,
             status: "unknown",
         });
-        await (0, lib_1.spawnAndWait)("ffmpeg", [
+        await (0, lib_1.spawnAndWait)(opts.ffmpeg, [
             "-i",
             path_1.default.join(modelOutputDir, "bass.mp3"),
             "-i",

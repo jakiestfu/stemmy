@@ -4,8 +4,10 @@ declare type StemmyOptions = {
     models: string;
     outDir: string;
     demucs: string;
+    ffmpeg: string;
     jobs?: number;
     fast?: boolean;
+    command?: boolean;
     onUpdate?: (data: {
         task: string;
         percentComplete: number;
