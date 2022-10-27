@@ -30,7 +30,7 @@ jobs:
           draft: false
           prerelease: false
           release_name: ${{ steps.version.outputs.version }}
-          tag_name: main
+          tag_name: image-${{ github.ref }}
           body: Linux Build
         env:
           GITHUB_TOKEN: ${{ github.token }}
