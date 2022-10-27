@@ -1,0 +1,46 @@
+name: Build Demucs Linux Binary
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-demucs-linux-binary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        name: Checkout repository
+
+      - name: Build Binary
+        run: | 
+          docker buildx build --platform linux/amd64 -f ./docker/Dockerfile -t demucs-linux .
+          CONTAINER_ID=$(docker run --detach -w /demucs demucs-linux)
+          docker cp $CONTAINER_ID:/demucs/dist ./demucs-cxfreeze-linux
+          zip demucs-cxfreeze-linux.zip ./demucs-cxfreeze-linux/* -r
+
+      - name: Generate Version
+        run: echo "::set-output name=version::stemmy-linux-bin-$(cat package.json | jq .version)"
+        id: version
+
+      - uses: actions/create-release@v1
+        name: Create Release
+        id: create_release
+        with:
+          draft: false
+          prerelease: false
+          release_name: ${{ steps.version.outputs.version }}
+          tag_name: ${{ github.ref }}
+          body: Linux BUild
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - uses: actions/upload-release-asset@v1
+        name: Upload Artifacts
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./demucs-cxfreeze-linux.zip
+          asset_name: demucs-cxfreeze-linux.zip
+          asset_content_type: application/zip
