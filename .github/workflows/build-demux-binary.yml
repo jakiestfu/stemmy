@@ -20,7 +20,7 @@ jobs:
           zip demucs-cxfreeze-linux.zip ./demucs-cxfreeze-linux/* -r
 
       - name: Generate Version
-        run: echo "::set-output name=version::stemmy-linux-bin-$(cat package.json | jq .version)"
+        run: echo "::set-output name=version::stemmy-linux-bin-$(cat package.json | jq .version -4)"
         id: version
 
       - uses: actions/create-release@v1
@@ -30,8 +30,8 @@ jobs:
           draft: false
           prerelease: false
           release_name: ${{ steps.version.outputs.version }}
-          tag_name: ${{ github.ref }}
-          body: Linux BUild
+          tag_name: main
+          body: Linux Build
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
