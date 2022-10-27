@@ -20,7 +20,7 @@ jobs:
           zip demucs-cxfreeze-linux.zip ./demucs-cxfreeze-linux/* -r
 
       - name: Generate Version
-        run: echo "::set-output name=version::stemmy-linux-bin-$(cat package.json | jq .version -4)"
+        run: echo "::set-output name=version::stemmy-linux-bin-$(cat package.json | jq .version -r)"
         id: version
 
       - uses: actions/create-release@v1

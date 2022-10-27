@@ -12,8 +12,14 @@ const package_json_1 = __importDefault(require("../package.json"));
 const stemmy_1 = require("../src");
 const safe_1 = __importDefault(require("colors/safe"));
 const cli_progress_1 = require("cli-progress");
+const os_1 = __importDefault(require("os"));
+const mkdirp_1 = __importDefault(require("mkdirp"));
+const rimraf_1 = __importDefault(require("rimraf"));
 const demucsUrl = () => {
-    return `https://github.com/stemrollerapp/demucs-cxfreeze/releases/download/1.0.0/demucs-cxfreeze-1.0.0-${process.platform === 'win32' ? 'win' : 'mac'}.zip`;
+    if (process.platform === "linux") {
+        return "https://github.com/jakiestfu/stemmy/releases/download/image-refs%2Fheads%2Fmain/demucs-cxfreeze-linux.zip";
+    }
+    return `https://github.com/stemrollerapp/demucs-cxfreeze/releases/download/1.0.0/demucs-cxfreeze-1.0.0-${process.platform === "win32" ? "win" : "mac"}.zip`;
 };
 const models = [
     "https://dl.fbaipublicfiles.com/demucs/mdx_final/83fc094f-4a16d450.th",
@@ -28,9 +34,9 @@ const cli = new commander_1.Command()
     .version(package_json_1.default.version);
 const defaultStemmyResourcesDir = path_1.default.join(process.cwd(), ".stemmy");
 const bar = new cli_progress_1.SingleBar({
-    format: `{task} [${safe_1.default.cyan('{bar}')}] {percentage}%`,
-    barCompleteChar: '=',
-    barIncompleteChar: '-',
+    format: `{task} [${safe_1.default.cyan("{bar}")}] {percentage}%`,
+    barCompleteChar: "=",
+    barIncompleteChar: "-",
 });
 cli
     .command("download")
@@ -41,15 +47,23 @@ cli
     console.log(`Downloading to ${outputDir}`);
     if (fs_extra_1.default.existsSync(outputDir))
         await fs_extra_1.default.rm(outputDir, { recursive: true, force: true });
-    console.log("Downloading demucs...");
-    await (0, download_1.default)(demucsUrl(), path_1.default.join(outputDir, "demucs"), {
+    const tmpdir = path_1.default.join(os_1.default.tmpdir(), 'stemmy-dl');
+    await (0, mkdirp_1.default)(tmpdir);
+    const url = demucsUrl();
+    const name = path_1.default.basename(url).replace(".zip", "");
+    const demucsOutDir = path_1.default.join(outputDir, "demucs");
+    console.log("Downloading demucs", url);
+    await (0, download_1.default)(url, tmpdir, {
         extract: true,
         filename: "demucs.zip",
     });
+    await (0, mkdirp_1.default)(demucsOutDir);
+    fs_extra_1.default.renameSync(path_1.default.join(tmpdir, name), path_1.default.join(demucsOutDir));
     await Promise.all(models.map((url) => (0, download_1.default)(url, path_1.default.join(outputDir, "models")).then((buffer) => {
         console.log(`Downloaded ${path_1.default.basename(url)}`);
         return buffer;
     })));
+    rimraf_1.default.sync(tmpdir);
 });
 cli
     .command("make")
@@ -59,13 +73,13 @@ cli
     .option("-r, --resources-dir <resourcesDir>", "Stemmy resources directory", defaultStemmyResourcesDir)
     .action(async (file, opts) => {
     bar.start(100, 0, {
-        task: "Initializing..."
+        task: "Initializing...",
     });
     const cwd = process.cwd();
     await (0, stemmy_1.stemmy)({
         file,
         outDir: opts.outDir ?? path_1.default.join(cwd, ".stems"),
-        demucs: path_1.default.join(opts.resourcesDir, "demucs", "demucs-cxfreeze-1.0.0-mac"),
+        demucs: path_1.default.join(opts.resourcesDir, "demucs"),
         models: path_1.default.join(opts.resourcesDir, "models"),
         onUpdate: ({ task, percentComplete }) => {
             bar.update(percentComplete, {
@@ -75,10 +89,10 @@ cli
         onError: () => {
         },
         onComplete: (res) => {
-            console.log('Stemmy is done', res);
+            console.log("Stemmy is done", res);
             process.exit(0);
         },
-        ffmpeg: 'ffmpeg'
+        ffmpeg: "ffmpeg",
     });
 });
 cli.parse();
