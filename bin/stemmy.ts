@@ -13,7 +13,7 @@ import rimraf from "rimraf";
 
 const demucsUrl = () => {
   if (process.platform === "linux") {
-    return "https://github.com/jakiestfu/stemmy/releases/download/image-refs%2Fheads%2Fmain/demucs-cxfreeze-linux.zip";
+    return "https://github.com/jakiestfu/stemmy/releases/download/stemmy-linux-bin-0.3.0/demucs-cxfreeze-linux.zip";
   }
   return `https://github.com/stemrollerapp/demucs-cxfreeze/releases/download/1.0.0/demucs-cxfreeze-1.0.0-${
     process.platform === "win32" ? "win" : "mac"
