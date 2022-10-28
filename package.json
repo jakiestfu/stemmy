@@ -7,6 +7,7 @@
     "example": ".build/bin/stemmy.js make ~/Desktop/DaBaby - Red Light Green Light (Official Video).mp3 -r ~/code/trill-app/.build/resources/stemmy -o .bounce",
     "prebuild": "yarn clean",
     "build": "ttsc -p ./tsconfig.json",
+    "docker:build": "docker buildx build --platform linux/amd64 -f ./docker/Dockerfile -t demucs-linux .",
     "postbuild": "chmod +x .build/bin/stemmy.js",
     "clean": "rimraf .build"
   },
