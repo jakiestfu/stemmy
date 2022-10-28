@@ -86,6 +86,7 @@ cli
   .description("Generate Stems")
   .argument("[inputFile]", "Audio file to convert to stems")
   .option("-o, --outDir <outDir>", "Output directory")
+  .option("--cpu", "Use the CPU", false)
   .option(
     "-r, --resources-dir <resourcesDir>",
     "Stemmy resources directory",
@@ -103,6 +104,7 @@ cli
       outDir: opts.outDir ?? path.join(cwd, ".stems"),
       demucs: path.join(opts.resourcesDir, "demucs"),
       models: path.join(opts.resourcesDir, "models"),
+      cpu: opts.cpu,
       onUpdate: ({ task, percentComplete }) => {
         bar.update(percentComplete, {
           task,

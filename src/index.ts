@@ -13,6 +13,7 @@ type StemmyOptions = {
   ffmpeg: string
   jobs?: number;
   fast?: boolean;
+  cpu?: boolean;
   command?: boolean;
   onUpdate?: (data: {
     task: string;
@@ -60,7 +61,7 @@ export const stemmy = async (opts: StemmyOptions) => {
   const preparedInputPath = path.join(modelOutputDir, `original${extension}`);
   fs.copyFileSync(opts.file, preparedInputPath);
 
-  const args = [
+  let args = [
     preparedInputPath,
     "-n",
     modelName,
@@ -72,6 +73,7 @@ export const stemmy = async (opts: StemmyOptions) => {
     tmpDir,
     "--mp3",
   ];
+  if (opts.cpu) args = ["-d cpu", ...args]
 
   const allExist = tracks.every((track) =>
     fs.existsSync(path.join(modelOutputDir, `${track}.mp3`))

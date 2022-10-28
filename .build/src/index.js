@@ -34,7 +34,7 @@ const stemmy = async (opts) => {
     await (0, mkdirp_1.default)(modelOutputDir);
     const preparedInputPath = path_1.default.join(modelOutputDir, `original${extension}`);
     fs_extra_1.default.copyFileSync(opts.file, preparedInputPath);
-    const args = [
+    let args = [
         preparedInputPath,
         "-n",
         modelName,
@@ -46,6 +46,8 @@ const stemmy = async (opts) => {
         tmpDir,
         "--mp3",
     ];
+    if (opts.cpu)
+        args = ["-d cpu", ...args];
     const allExist = tracks.every((track) => fs_extra_1.default.existsSync(path_1.default.join(modelOutputDir, `${track}.mp3`)));
     const demucsPath = path_1.default.join(opts.demucs, "demucs-cxfreeze");
     if (opts.command) {

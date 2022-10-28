@@ -7,6 +7,7 @@ declare type StemmyOptions = {
     ffmpeg: string;
     jobs?: number;
     fast?: boolean;
+    cpu?: boolean;
     command?: boolean;
     onUpdate?: (data: {
         task: string;

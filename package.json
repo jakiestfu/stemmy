@@ -1,10 +1,9 @@
 {
   "name": "@jakiestfu/stemmy",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "An experimental Typescript wrapper for demucs",
   "main": ".build/src/index.js",
   "scripts": {
-    "example": ".build/bin/stemmy.js make ~/Desktop/DaBaby - Red Light Green Light (Official Video).mp3 -r ~/code/trill-app/.build/resources/stemmy -o .bounce",
     "prebuild": "yarn clean",
     "build": "ttsc -p ./tsconfig.json",
     "docker:build": "docker buildx build --platform linux/amd64 -f ./docker/Dockerfile -t demucs-linux .",
