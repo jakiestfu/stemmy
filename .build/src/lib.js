@@ -34,9 +34,11 @@ const spawnAndWait = (command, args, opts = {}) => {
         if (opts.onError)
             child.stderr.on("data", opts.onError);
         child.on("error", (error) => {
+            console.log('ERROR', error);
             reject(error);
         });
         child.on("exit", (code, signal) => {
+            console.log('EXIT', { code, signal });
             if (signal !== null) {
                 reject(new Error(`Child process exited due to signal: ${signal}`));
             }
