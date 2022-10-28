@@ -17,7 +17,7 @@ const mkdirp_1 = __importDefault(require("mkdirp"));
 const rimraf_1 = __importDefault(require("rimraf"));
 const demucsUrl = () => {
     if (process.platform === "linux") {
-        return "https://github.com/jakiestfu/stemmy/releases/download/stemmy-linux-bin-0.3.0/demucs-cxfreeze-linux.zip";
+        return "https://github.com/jakiestfu/stemmy/releases/download/stemmy-linux-bin-0.3.1/demucs-cxfreeze-linux.zip";
     }
     return `https://github.com/stemrollerapp/demucs-cxfreeze/releases/download/1.0.0/demucs-cxfreeze-1.0.0-${process.platform === "win32" ? "win" : "mac"}.zip`;
 };

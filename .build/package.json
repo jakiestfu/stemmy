@@ -1,6 +1,6 @@
 {
     "name": "@jakiestfu/stemmy",
-    "version": "0.3.0",
+    "version": "0.3.1",
     "description": "An experimental Typescript wrapper for demucs",
     "main": ".build/src/index.js",
     "scripts": {
