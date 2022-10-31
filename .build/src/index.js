@@ -47,7 +47,7 @@ const stemmy = async (opts) => {
         "--mp3",
     ];
     if (opts.cpu)
-        args = ["-d cpu", ...args];
+        args = ["-d", "cpu", ...args];
     const allExist = tracks.every((track) => fs_extra_1.default.existsSync(path_1.default.join(modelOutputDir, `${track}.mp3`)));
     const demucsPath = opts.bin ?? path_1.default.join(opts.demucs, "demucs-cxfreeze");
     if (opts.command) {

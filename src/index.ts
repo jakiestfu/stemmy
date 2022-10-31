@@ -75,7 +75,7 @@ export const stemmy = async (opts: StemmyOptions) => {
     tmpDir,
     "--mp3",
   ];
-  if (opts.cpu) args = ["-d cpu", ...args]
+  if (opts.cpu) args = ["-d", "cpu", ...args]
 
   const allExist = tracks.every((track) =>
     fs.existsSync(path.join(modelOutputDir, `${track}.mp3`))
