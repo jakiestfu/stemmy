@@ -9,6 +9,7 @@ declare type StemmyOptions = {
     fast?: boolean;
     cpu?: boolean;
     command?: boolean;
+    bin?: string;
     onUpdate?: (data: {
         task: string;
         percentComplete: number;

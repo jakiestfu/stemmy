@@ -15,6 +15,7 @@ type StemmyOptions = {
   fast?: boolean;
   cpu?: boolean;
   command?: boolean;
+  bin?: string;
   onUpdate?: (data: {
     task: string;
     percentComplete: number;
@@ -79,7 +80,7 @@ export const stemmy = async (opts: StemmyOptions) => {
     fs.existsSync(path.join(modelOutputDir, `${track}.mp3`))
   );
 
-  const demucsPath = path.join(opts.demucs, "demucs-cxfreeze")
+  const demucsPath = opts.bin ?? path.join(opts.demucs, "demucs-cxfreeze")
   if (opts.command) {
     console.log(demucsPath, args);
   }
