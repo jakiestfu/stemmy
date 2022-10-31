@@ -56,6 +56,7 @@ const stemmy = async (opts) => {
     if (!allExist)
         await (0, lib_1.spawnAndWait)(demucsPath, args, {
             onError: (data) => {
+                opts.onLog?.(data);
                 const percentMatches = data.toString().match(/[0-9]+%/g);
                 if (!percentMatches) {
                     opts.onError?.(data);

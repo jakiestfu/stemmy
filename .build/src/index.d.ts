@@ -10,6 +10,7 @@ declare type StemmyOptions = {
     cpu?: boolean;
     command?: boolean;
     bin?: string;
+    onLog?: (...args: unknown[]) => void;
     onUpdate?: (data: {
         task: string;
         percentComplete: number;

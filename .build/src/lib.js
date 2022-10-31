@@ -22,10 +22,12 @@ const spawnAndWait = (command, args, opts = {}) => {
             cwd: opts.cwd,
         });
         process.on("SIGINT", () => {
+            console.log('SIG INT, KILLING CHILD');
             if (child.pid)
                 (0, tree_kill_1.default)(child.pid);
         });
         process.on("exit", () => {
+            console.log('EXIT, KILLING CHILD');
             if (child.pid)
                 (0, tree_kill_1.default)(child.pid);
         });

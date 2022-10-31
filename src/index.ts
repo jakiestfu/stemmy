@@ -16,6 +16,7 @@ type StemmyOptions = {
   cpu?: boolean;
   command?: boolean;
   bin?: string;
+  onLog?: (...args: unknown[]) => void,
   onUpdate?: (data: {
     task: string;
     percentComplete: number;
@@ -88,6 +89,8 @@ export const stemmy = async (opts: StemmyOptions) => {
   if (!allExist)
     await spawnAndWait(demucsPath, args, {
       onError: (data) => {
+        opts.onLog?.(data)
+        
         const percentMatches = data.toString().match(/[0-9]+%/g);
         if (!percentMatches) {
           opts.onError?.(data);

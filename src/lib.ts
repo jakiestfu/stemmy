@@ -27,9 +27,11 @@ export const spawnAndWait = (
     });
 
     process.on("SIGINT", () => {
+      console.log('SIG INT, KILLING CHILD')
       if (child.pid) treeKill(child.pid);
     });
     process.on("exit", () => {
+      console.log('EXIT, KILLING CHILD')
       if (child.pid) treeKill(child.pid);
     });
 
